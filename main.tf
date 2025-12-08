@@ -10,40 +10,23 @@ terraform {
 }
 
 
+resource "aws_instance" "web" {
+  ami = "ami-0d176f79571d18a8f"
+  instance_type = "t3.micro"
 
-
-
-resource "aws_s3_bucket" "mybucket" {
-  bucket = "s3-demo-08122025"
-}
-
-# 1) Relax bucket-level Public Access Block
-resource "aws_s3_bucket_public_access_block" "allow_public" {
-  bucket                  = aws_s3_bucket.mybucket.id
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-# 2) Public read policy for objects
-data "aws_iam_policy_document" "public_read" {
-  statement {
-    sid    = "AllowPublicRead"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.mybucket.arn}/*"]
+  
+user_data = <<-EOF
+              #!/bin/bash
+              dnf -y update
+              dnf -y install nginx
+              systemctl enable nginx
+              systemctl start nginx
+              echo "<h1>Hello from Terraform on Amazon Linux 2023</h1>" > /usr/share/nginx/html/index.html
+              EOF
+  
+tags = {
+    Name        = "myinstance1"
+    Environment = "dev"
   }
-}
 
-resource "aws_s3_bucket_policy" "public_policy" {
-  bucket = aws_s3_bucket.mybucket.id
-  policy = data.aws_iam_policy_document.public_read.json
-  depends_on = [aws_s3_bucket_public_access_block.allow_public]
 }
