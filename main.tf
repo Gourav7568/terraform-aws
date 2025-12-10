@@ -9,9 +9,6 @@ terraform {
   required_version = ">= 1.2"
 }
 
-provider "aws" {
-  region = "ap-south-1"
-}
 
 resource "aws_instance" "web" {
   ami = "ami-0d176f79571d18a8f"
@@ -33,4 +30,5 @@ tags = {
   }
 
 }
+
 
